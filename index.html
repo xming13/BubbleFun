@@ -68,7 +68,7 @@
 					// position the mesh
 					mesh.position.x = ( Math.random() - 0.5 ) * 10;
 					mesh.position.y = ( Math.random() - 0.5 ) * 10;
-					mesh.position.z = ( Math.random() - 0.5 ) * 5 - 5;
+					mesh.position.z = ( Math.random() - 0.5 ) * 10 - 5;
 					// set the scale of the mesh
 					mesh.scale.multiplyScalar( Math.random() * 1 + 1 );
 				}
@@ -118,7 +118,7 @@
 			}
 
 			function onMouseMove(event) {
-				mouse.x	= (event.clientX / window.innerWidth ) - 0.5;
+				mouse.x	= -(event.clientX / window.innerWidth ) + 0.5;
 				mouse.y	= (event.clientY / window.innerHeight) - 0.5;
 			}
 
@@ -142,11 +142,11 @@
 			    	var bubbleClicked = intersects[0].object;
 			    	var newBubble1 = bubbleClicked.clone();
 			    	newBubble1.scale.set(bubbleClicked.scale.x / 2, bubbleClicked.scale.y / 2, bubbleClicked.scale.z / 2);
-			    	newBubble1.position.set(bubbleClicked.position.x - 50, bubbleClicked.position.y, bubbleClicked.position.z);
+			    	newBubble1.position.set(bubbleClicked.position.x - 0.5, bubbleClicked.position.y, bubbleClicked.position.z);
 			    	
 			    	var newBubble2 = bubbleClicked.clone();
 			    	newBubble2.scale.set(bubbleClicked.scale.x / 2, bubbleClicked.scale.y / 2, bubbleClicked.scale.z / 2);
-			    	newBubble2.position.set(bubbleClicked.position.x + 50, bubbleClicked.position.y, bubbleClicked.position.z);
+			    	newBubble2.position.set(bubbleClicked.position.x + 0.5, bubbleClicked.position.y, bubbleClicked.position.z);
 
 			    	bubbleMeshes.push(newBubble1);
 			    	bubbleMeshes.push(newBubble2);
