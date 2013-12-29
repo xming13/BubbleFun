@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>Bubble Fun (three.js)</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+			body {
+				font-family: Monospace;
+				background-color: #000;
+				margin: 0px;
+				overflow: hidden;
+			}
+		</style>
+	</head>
+	<body>
+
+		<script src="js/three.min.js"></script>
+		<script src="js/three.FresnelShader.js"></script>
+		<script src="js/threex.bubble.js"></script>
+		<script src="js/Detector.js"></script>
+		<script src="js/stats.min.js"></script>
+
+		<script>
+
+			if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
+
+			var container,
+				stats,
+				camera, 
+				scene, 
+				renderer,
+				clock = new THREE.Clock(),
+				projector,
+				mouse,
+				mouseVector, 
+				bubbleMeshes;
+
+			init();
+			animate();
+
+			function init() {
+
+				container = document.createElement( 'div' );
+				document.body.appendChild( container );
+
+				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 0.01, 1000 );
+				camera.position.set( 0, 200, 3 );
+
+				scene = new THREE.Scene();
+				projector = new THREE.Projector();
+
+				// Bubbles
+				bubbleMeshes = [];
+				var path = "textures/pisa/";
+				var format = '.png';
+				var urls = [
+					path + 'px' + format, path + 'nx' + format,
+					path + 'py' + format, path + 'ny' + format,
+					path + 'pz' + format, path + 'nz' + format
+				];
+				var textureCube = THREE.ImageUtils.loadTextureCube( urls );
+				for ( var i = 0; i < 100; i++) {
+					var mesh	= new THREEx.BubbleMesh(textureCube);
+					bubbleMeshes.push(mesh);
+					scene.add(mesh);
+					
+					// position the mesh
+					mesh.position.x = ( Math.random() - 0.5 ) * 10;
+					mesh.position.y = ( Math.random() - 0.5 ) * 10;
+					mesh.position.z = ( Math.random() - 0.5 ) * 5 - 5;
+					// set the scale of the mesh
+					mesh.scale.multiplyScalar( Math.random() * 1 + 1 );
+				}
+
+				// Skybox
+				var shader	= THREE.ShaderLib[ "cube" ];
+				shader.uniforms[ "tCube" ].value = textureCube;
+				var material	= new THREE.ShaderMaterial( {
+					fragmentShader	: shader.fragmentShader,
+					vertexShader	: shader.vertexShader,
+					uniforms	: shader.uniforms,
+					side		: THREE.BackSide
+				})
+				var geometry	= new THREE.CubeGeometry(5000, 500, 500)
+				var meshSkybox	= new THREE.Mesh(geometry, material);
+				scene.add( meshSkybox );
+				
+				// Lights
+				scene.add( new THREE.AmbientLight( 0x111111 ) );
+
+				var directionalLight = new THREE.DirectionalLight( 0xffffff, 0.125 );
+				directionalLight.position.x = Math.random() - 0.5;
+				directionalLight.position.y = Math.random() - 0.5;
+				directionalLight.position.z = Math.random() - 0.5;
+				directionalLight.position.normalize();
+
+				scene.add( directionalLight );	
+
+				// Renderer 
+				renderer = new THREE.WebGLRenderer( { antialias: true } );
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+				container.appendChild( renderer.domElement );
+
+				// Stats
+				stats = new Stats();
+				stats.domElement.style.position = 'absolute';
+				stats.domElement.style.top = '0px';
+
+				container.appendChild( stats.domElement );
+				
+				// Event Listeners
+				mouse	= {x : 0, y : 0};
+				document.addEventListener( 'mousemove', onMouseMove, false );
+				window.addEventListener( 'resize', onWindowResize, false );
+				window.addEventListener( 'mousedown', onDocumentMouseDown, false );
+			}
+
+			function onMouseMove(event) {
+				mouse.x	= (event.clientX / window.innerWidth ) - 0.5;
+				mouse.y	= (event.clientY / window.innerHeight) - 0.5;
+			}
+
+			function onWindowResize() {
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+
+				renderer.setSize( window.innerWidth, window.innerHeight );
+			}
+
+			function onDocumentMouseDown(event) {
+			    event.preventDefault();
+
+			    mouseVector = new THREE.Vector3( ( event.clientX / window.innerWidth ) * 2 - 1, - ( event.clientY / window.innerHeight ) * 2 + 1, 1 );
+			    projector.unprojectVector( mouseVector, camera );
+			    var raycaster = new THREE.Raycaster( camera.position, mouseVector.sub( camera.position ).normalize() );
+				var intersects = raycaster.intersectObjects( bubbleMeshes );
+				
+			    if ( intersects.length > 0 ) {			    
+
+			    	var bubbleClicked = intersects[0].object;
+			    	var newBubble1 = bubbleClicked.clone();
+			    	newBubble1.scale.set(bubbleClicked.scale.x / 2, bubbleClicked.scale.y / 2, bubbleClicked.scale.z / 2);
+			    	newBubble1.position.set(bubbleClicked.position.x - 50, bubbleClicked.position.y, bubbleClicked.position.z);
+			    	
+			    	var newBubble2 = bubbleClicked.clone();
+			    	newBubble2.scale.set(bubbleClicked.scale.x / 2, bubbleClicked.scale.y / 2, bubbleClicked.scale.z / 2);
+			    	newBubble2.position.set(bubbleClicked.position.x + 50, bubbleClicked.position.y, bubbleClicked.position.z);
+
+			    	bubbleMeshes.push(newBubble1);
+			    	bubbleMeshes.push(newBubble2);
+			    	scene.add(newBubble1);
+			    	scene.add(newBubble2);
+
+			    	scene.remove(bubbleClicked);
+			    	var bubbleMeshIndex = bubbleMeshes.indexOf(bubbleClicked);
+					if (bubbleMeshIndex > -1) {
+						bubbleMeshes.splice(bubbleMeshIndex, 1);
+					}
+			    }
+			}
+
+			function animate() {
+
+				requestAnimationFrame( animate );
+
+				render();
+				stats.update();
+			}
+
+			function render() {
+
+				var now = 0.001 * Date.now();
+				var dt = clock.getDelta();
+
+				camera.position.x += (mouse.x*5 - camera.position.x) * ( dt * 3 );
+				camera.position.y += (mouse.y*5 - camera.position.y) * ( dt * 3 );
+				camera.lookAt( scene.position );
+
+				for ( var i = 0, l = bubbleMeshes.length; i < l; i ++ ) {
+
+					var bubbleMesh = bubbleMeshes[ i ];
+
+					bubbleMesh.rotation.x += 0.01;
+					bubbleMesh.rotation.y += 0.005;
+
+					bubbleMesh.position.x += 0;
+					bubbleMesh.position.y += 0;
+
+					var angle	= 0.01  * now * Math.PI * 2;
+					bubbleMesh.position.x = 4 * Math.cos( angle + bubbleMesh.id);
+					bubbleMesh.position.y = 10 * Math.sin( angle + bubbleMesh.id * 1.1 );
+				}
+
+				renderer.render( scene, camera );
+			}
+
+		</script>
+
+	</body>
+</html>
