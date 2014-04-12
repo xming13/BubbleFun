@@ -17,6 +17,7 @@
 		<script src="js/three.min.js"></script>
 		<script src="js/three.FresnelShader.js"></script>
 		<script src="js/threex.bubble.js"></script>
+        <script src="js/howler.js"></script>
 		<script src="js/Detector.js"></script>
 		<script src="js/stats.min.js"></script>
 
@@ -34,6 +35,7 @@
 				mouse,
 				mouseVector, 
 				bubbleMeshes,
+                soundBubblePop,
 				timerCountdown,
 				isTimerFinished = false,
 				scoreList;
@@ -78,6 +80,11 @@
 					// set custom data
 					mesh.userData = { generation: 1 };
 				}
+
+                // Audio
+                soundBubblePop = new Howl({
+                    urls: ['audio/bubblepop.mp3']
+                });
 
 				// Score
 				scoreList = { 
@@ -157,7 +164,9 @@
 			    	scoreList[ "gen" + bubbleClicked.userData.generation ]++;
 
 			    	if (bubbleClicked.userData.generation < 4) {
-			    		var newBubble1 = bubbleClicked.clone();
+                        soundBubblePop.play();
+
+                        var newBubble1 = bubbleClicked.clone();
 				    	newBubble1.scale.multiplyScalar( 0.5 );
 				    	newBubble1.userData.generation++;
 				    	var newBubble2 = newBubble1.clone();
